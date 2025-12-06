@@ -1,18 +1,2 @@
-// --- ZENTRALE DATENBANK ---
-// Diese Datei wurde initial erstellt.
-// Nutze das Admin-Tool (admin_tool.html), um echte Daten hier einzufügen.
-
-window.EXTERNE_DATEN = {
-    settings: {
-        coordinatorRate: 85.00,
-        rate1: 65.00, percent1: 10,
-        rate2: 55.00, percent2: 30,
-        rate3: 45.00, percent3: 60
-    },
-    weldTypes: [
-        // Beispiel-Daten (werden überschrieben, sobald du das Admin-Tool nutzt)
-        { id: '1000', category: 'rohr', name: 'Rohr DN50 Montage', minutesPerMeter: 30 },
-        { id: '2000', category: 'schweiss', name: 'Kehlnaht a3', minutesPerMeter: 12 },
-        { id: '3000', category: 'sonstiges', name: 'Rüstzeit', minutesPerMeter: 30 }
-    ]
-};
+// GESCHÜTZTE DATENBANK (Generiert am 6.12.2025, 13:43:22)
+window.GEHEIM_DATEN = "eyJzZXR0aW5ncyI6eyJjb29yZGluYXRvclJhdGUiOjg1LCJyYXRlMSI6NjUsInBlcmNlbnQxIjoxMCwicmF0ZTIiOjU1LCJwZXJjZW50MiI6MzAsInJhdGUzIjo0NSwicGVyY2VudDMiOjYwfSwid2VsZFR5cGVzIjpbeyJpZCI6IjEwMDAiLCJjYXRlZ29yeSI6InJvaHIiLCJuYW1lIjoiUm9ociBETjI1IE1vbnRhZ2UiLCJtaW51dGVzUGVyTWV0ZXIiOjMwfSx7ImlkIjoiMTAwMSIsImNhdGVnb3J5Ijoicm9ociIsIm5hbWUiOiJSb2hyIERONTAgTW9udGFnZSIsIm1pbnV0ZXNQZXJNZXRlciI6MzV9LHsiaWQiOiIxMDAyIiwiY2F0ZWdvcnkiOiJyb2hyIiwibmFtZSI6IlJvaHIgRE44MCBNb250YWdlIiwibWludXRlc1Blck1ldGVyIjo0MH0seyJpZCI6IjEwMDMiLCJjYXRlZ29yeSI6InJvaHIiLCJuYW1lIjoiUm9ociBETjEwMCBNb250YWdlIiwibWludXRlc1Blck1ldGVyIjo0NX0seyJpZCI6IjEwMDQiLCJjYXRlZ29yeSI6InJvaHIiLCJuYW1lIjoiRmxhbnNjaHZlcmJpbmR1bmcgRE44MCIsIm1pbnV0ZXNQZXJNZXRlciI6MjB9LHsiaWQiOiIxMDA1IiwiY2F0ZWdvcnkiOiJzY2h3ZWlzcyIsIm5hbWUiOiJTY2h3ZWnDn25haHQgRE41MCIsIm1pbnV0ZXNQZXJNZXRlciI6MTJ9LHsiaWQiOiIxMDA2IiwiY2F0ZWdvcnkiOiJzY2h3ZWlzcyIsIm5hbWUiOiJTY2h3ZWnDn25haHQgRE44MCIsIm1pbnV0ZXNQZXJNZXRlciI6MjV9LHsiaWQiOiIxMDA3IiwiY2F0ZWdvcnkiOiJzb25zdGlnZXMiLCJuYW1lIjoiRnJlaWdhYmVuIiwibWludXRlc1Blck1ldGVyIjozMH0seyJpZCI6IjEwMDgiLCJjYXRlZ29yeSI6InNvbnN0aWdlcyIsIm5hbWUiOiJUcmFuc3BvcnRlIiwibWludXRlc1Blck1ldGVyIjo2MH1dfQ==";
