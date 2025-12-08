@@ -294,6 +294,7 @@
                                 <div className="text-center text-xs text-gray-400 dark:text-[#444] no-print pb-10">Basis: Mischstundensatz {formatCurrency(mixedHourlyRate)}/h</div>
                             </div>
                         )}
+
                         {/* --- TAB 2: DATENBANK --- */}
                         {activeTab === 'db' && (
                             <div className="space-y-6 fade-in max-w-2xl mx-auto">
@@ -303,8 +304,8 @@
                                     <div className="space-y-4"><label className="text-xs font-bold text-blue-600 dark:text-mat-primary uppercase block">Mischkalkulation (Montage)</label>
                                         {RATE_LABELS.map(({id, label}) => (
                                             <div key={id} className="grid grid-cols-2 gap-4">
-                                                <div><span className="text-[10px] text-gray-500 dark:text-mat-subtext uppercase mb-1 block">{label} (€)</span><input type="number" disabled={isExternalData} value={settings[`rate${id}`] || ''} onChange={(e) => setSettings({...settings, [`rate${id}`]: parseFloat(e.target.value) || 0})} className="w-full p-2 rounded-lg mat-input pr-12" /></div>
-                                                <div><span className="text-[10px] text-gray-500 dark:text-mat-subtext uppercase mb-1 block">Anteil (%)</span><input type="number" disabled={false} value={settings[`percent${id}`] || ''} onChange={(e) => setSettings({...settings, [`percent${id}`]: parseFloat(e.target.value) || 0})} className="w-full p-2 rounded-lg mat-input pr-12" /></div>
+                                                <div><span className="text-[10px] text-gray-500 dark:text-mat-subtext uppercase mb-1 block">{label} (€)</span><input type="number" disabled={isExternalData} value={settings[`rate${id}`] || ''} onChange={(e) => setSettings({...settings, [`rate${id}`]: parseFloat(e.target.value) || 0})} className="w-full p-2 rounded-lg mat-input" /></div>
+                                                <div><span className="text-[10px] text-gray-500 dark:text-mat-subtext uppercase mb-1 block">Anteil (%)</span><input type="number" disabled={false} value={settings[`percent${id}`] || ''} onChange={(e) => setSettings({...settings, [`percent${id}`]: parseFloat(e.target.value) || 0})} className="w-full p-2 rounded-lg mat-input" /></div>
                                             </div>
                                         ))}
                                     </div>
@@ -312,7 +313,7 @@
                                 </div>
                                 <div className="bg-white dark:bg-mat-surface p-5 rounded-xl border border-gray-200 dark:border-[#333] shadow-md dark:shadow-mat">
                                     <div className="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-[#333] pb-2"><h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Arbeitswerte</h3><div className="flex items-center gap-2 bg-gray-100 dark:bg-[#1e1e1e] px-2 py-1 rounded"><IconSearch size={14} className="text-gray-400"/><input type="text" value={dbSearchTerm} onChange={(e) => setDbSearchTerm(e.target.value)} placeholder="Suchen..." className="bg-transparent text-xs outline-none w-32 dark:text-white" /></div></div>
-                                    <div className="max-h-96 overflow-y-auto">{weldTypes.filter(t => t.name.toLowerCase().includes(dbSearchTerm.toLowerCase())).map((type) => (<div key={type.id} className="flex gap-2 mb-2"><input type="text" disabled={isExternalData} value={type.name} className="w-full p-2 rounded bg-transparent border border-gray-200 dark:border-[#333] text-sm text-slate-600 dark:text-mat-subtext focus:border-blue-500 dark:focus:border-mat-primary outline-none" /><input type="number" disabled={isExternalData} value={type.minutesPerMeter} className="w-20 text-right p-2 rounded bg-transparent border border-gray-200 dark:border-[#333] text-sm text-slate-800 dark:text-white focus:border-blue-500 dark:focus:border-mat-primary outline-none pr-12" /></div>))}</div>
+                                    <div className="max-h-96 overflow-y-auto">{weldTypes.filter(t => t.name.toLowerCase().includes(dbSearchTerm.toLowerCase())).map((type) => (<div key={type.id} className="flex gap-2 mb-2"><input type="text" disabled={isExternalData} value={type.name} className="w-32 text-right p-2 rounded bg-transparent border border-gray-200 dark:border-[#333] text-sm text-slate-800 dark:text-white focus:border-blue-500 dark:focus:border-mat-primary outline-none" /><input type="number" disabled={isExternalData} value={type.minutesPerMeter} className="w-32 text-right p-2 rounded bg-transparent border border-gray-200 dark:border-[#333] text-sm text-slate-800 dark:text-white focus:border-blue-500 dark:focus:border-mat-primary outline-none" /></div>))}</div>
                                 </div>
                                 <div className="bg-white dark:bg-mat-surface p-5 rounded-xl border border-gray-200 dark:border-[#333] shadow-md dark:shadow-mat mt-8">
                                     <h3 className="text-sm font-bold text-gray-500 dark:text-mat-subtext mb-4 flex items-center gap-2"><IconLink /> Verbindung</h3>
