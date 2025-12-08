@@ -2,8 +2,8 @@
 <html lang="de" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Werkstatt Kalkulator (Final)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Werkstatt Kalkulator (App)</title>
     
     <!-- Externe Bibliotheken -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -38,36 +38,22 @@
     </script>
 
     <style>
-        body { transition: background-color 0.3s, color 0.3s; }
+        body { transition: background-color 0.3s, color 0.3s; -webkit-tap-highlight-color: transparent; }
         
-        /* --- DRUCK-ANPASSUNGEN (FIX: LEERE SEITE) --- */
+        /* --- DRUCK-ANPASSUNGEN --- */
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
             #print-area { 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 100%; 
-                margin: 0; 
-                padding: 20px; 
-                background-color: white !important; 
-                color: black !important; 
+                position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; 
+                background-color: white !important; color: black !important; 
             }
-
-            /* Zwingend alles auf hell setzen für den Druck */
-            html, body {
-                background-color: white !important;
-                color: black !important;
-                height: auto !important;
-                overflow: visible !important;
-            }
-
+            html, body { background-color: white !important; color: black !important; height: auto !important; overflow: visible !important; }
             .no-print { display: none !important; }
             .print-break-inside { break-inside: avoid; }
         }
 
-        /* --- INPUT STYLING & PFEILE --- */
+        /* --- INPUT STYLING --- */
         .mat-input { transition: all 0.2s; outline: none; }
         html:not(.dark) .mat-input { background-color: #ffffff; border: 1px solid #e2e8f0; color: #1e293b; }
         html:not(.dark) .mat-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
@@ -75,27 +61,19 @@
         html.dark .mat-input:focus { border-color: #bb86fc; background-color: #333; }
         .mat-input:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        /* 1. Standard: KEINE Pfeile bei Zahleneingabe */
+        /* Standard: KEINE Pfeile */
         input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-        input[type=number] { 
-            -moz-appearance: textfield; 
-            appearance: textfield;
-        }
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 
-        /* 2. Ausnahme: Klasse .input-factor zeigt Pfeile wieder an */
+        /* Ausnahme: Faktor mit Pfeilen */
         input[type=number].input-factor::-webkit-inner-spin-button, 
         input[type=number].input-factor::-webkit-outer-spin-button { 
-            -webkit-appearance: inner-spin-button !important;
-            opacity: 1 !important;
-            margin-left: 5px;
+            -webkit-appearance: inner-spin-button !important; opacity: 1 !important; margin-left: 5px; 
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
@@ -109,7 +87,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useCallback } = React;
 
         // --- KONFIGURATION ---
         const DATABASE_PATH = "datenbank.js"; 
@@ -136,255 +114,86 @@
         const IconSearch = (p) => <svg width="18" height="18" {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
         const IconChevronDown = (p) => <svg width="18" height="18" {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>;
         const IconUpload = (p) => <svg width="18" height="18" {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>;
+        const IconMaximize = (p) => <svg width="18" height="18" {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>;
+        const IconMinimize = (p) => <svg width="18" height="18" {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>;
 
-        const DEFAULT_WELD_TYPES = [{ id: '1', name: 'Kehlnaht a3', minutesPerMeter: 12 }];
-
+        const DEFAULT_WELD_TYPES = []; 
         const CATEGORIES = {
             rohr: { label: "Rohrleitungs Montage & Demontage", icon: IconWrench, color: "text-indigo-600 dark:text-indigo-400", unit: 'm' },
             schweiss: { label: "Schweißarbeiten & Fertigung", icon: IconHammer, color: "text-orange-600 dark:text-orange-400", unit: '' },
             sonstiges: { label: "Sonstiges", icon: IconMore, color: "text-teal-600 dark:text-teal-400", unit: '' }
         };
-
         const RATE_LABELS = [
             { id: 1, label: "Spezialist/Schweißer" },
             { id: 2, label: "Handwerker" },
             { id: 3, label: "AÜG" }
         ];
 
-        // --- SEARCHABLE SELECT COMPONENT ---
+        // --- SEARCHABLE SELECT ---
         const SearchableSelect = ({ options, value, onChange, placeholder = "Wählen..." }) => {
             const [isOpen, setIsOpen] = useState(false);
             const [search, setSearch] = useState("");
             const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
-            
             const wrapperRef = useRef(null);
             const dropdownRef = useRef(null);
-
             const selectedOption = options.find(o => o.id === value);
-
-            const updatePosition = () => {
-                if (wrapperRef.current) {
-                    const rect = wrapperRef.current.getBoundingClientRect();
-                    setPosition({ top: rect.bottom, left: rect.left, width: rect.width });
-                }
-            };
-
+            const updatePosition = () => { if (wrapperRef.current) { const rect = wrapperRef.current.getBoundingClientRect(); setPosition({ top: rect.bottom, left: rect.left, width: rect.width }); } };
             useEffect(() => {
-                const handleClickOutside = (event) => {
-                    const clickedWrapper = wrapperRef.current && wrapperRef.current.contains(event.target);
-                    const clickedDropdown = dropdownRef.current && dropdownRef.current.contains(event.target);
-                    if (!clickedWrapper && !clickedDropdown) { setIsOpen(false); setSearch(""); }
-                };
-                if (isOpen) {
-                    updatePosition();
-                    document.addEventListener("mousedown", handleClickOutside);
-                    window.addEventListener("scroll", updatePosition, true);
-                    window.addEventListener("resize", updatePosition);
-                }
-                return () => {
-                    document.removeEventListener("mousedown", handleClickOutside);
-                    window.removeEventListener("scroll", updatePosition, true);
-                    window.removeEventListener("resize", updatePosition);
-                };
+                const handleClickOutside = (event) => { if (wrapperRef.current && !wrapperRef.current.contains(event.target) && dropdownRef.current && !dropdownRef.current.contains(event.target)) { setIsOpen(false); setSearch(""); } };
+                if (isOpen) { updatePosition(); document.addEventListener("mousedown", handleClickOutside); window.addEventListener("scroll", updatePosition, true); window.addEventListener("resize", updatePosition); }
+                return () => { document.removeEventListener("mousedown", handleClickOutside); window.removeEventListener("scroll", updatePosition, true); window.removeEventListener("resize", updatePosition); };
             }, [isOpen]);
-
             const toggleOpen = () => { setIsOpen(!isOpen); if (!isOpen) setSearch(""); };
             const filteredOptions = options.filter(opt => opt.name.toLowerCase().includes(search.toLowerCase()));
-
             const dropdownContent = (
-                <div 
-                    ref={dropdownRef}
-                    style={{ position: 'fixed', top: position.top, left: position.left, width: position.width, zIndex: 9999 }}
-                    className="mt-1 max-h-96 overflow-auto rounded-lg shadow-2xl bg-white dark:bg-[#2c2c2c] border border-gray-200 dark:border-[#444]"
-                >
-                    <div className="p-2 sticky top-0 bg-white dark:bg-[#2c2c2c] border-b border-gray-100 dark:border-[#444]">
-                        <div className="flex items-center gap-2 px-2 py-1 bg-gray-100 dark:bg-[#1e1e1e] rounded">
-                            <IconSearch size={14} className="text-gray-400"/>
-                            <input type="text" autoFocus value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Suchen..." className="w-full bg-transparent text-xs outline-none text-slate-800 dark:text-white"/>
-                        </div>
-                    </div>
-                    <div className="py-1">
-                        {filteredOptions.length > 0 ? (
-                            filteredOptions.map(opt => (
-                                <div key={opt.id} onClick={() => { onChange(opt.id); setIsOpen(false); setSearch(""); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-gray-100 dark:hover:bg-[#3a3a3a] ${opt.id === value ? 'bg-blue-50 dark:bg-[#333] text-blue-600 dark:text-mat-primary' : 'text-slate-600 dark:text-gray-300'}`}>
-                                    <div className="font-medium">{opt.name}</div>
-                                    <div className="text-[10px] opacity-70">{opt.minutesPerMeter} min</div>
-                                </div>
-                            ))
-                        ) : (<div className="px-3 py-2 text-xs text-gray-400 text-center">Keine Treffer</div>)}
-                    </div>
+                <div ref={dropdownRef} style={{ position: 'fixed', top: position.top, left: position.left, width: position.width, zIndex: 9999 }} className="mt-1 max-h-96 overflow-auto rounded-lg shadow-2xl bg-white dark:bg-[#2c2c2c] border border-gray-200 dark:border-[#444]">
+                    <div className="p-2 sticky top-0 bg-white dark:bg-[#2c2c2c] border-b border-gray-100 dark:border-[#444]"><div className="flex items-center gap-2 px-2 py-1 bg-gray-100 dark:bg-[#1e1e1e] rounded"><IconSearch size={14} className="text-gray-400"/><input type="text" autoFocus value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Suchen..." className="w-full bg-transparent text-xs outline-none text-slate-800 dark:text-white"/></div></div>
+                    <div className="py-1">{filteredOptions.length > 0 ? (filteredOptions.map(opt => (<div key={opt.id} onClick={() => { onChange(opt.id); setIsOpen(false); setSearch(""); }} className={`px-3 py-2 text-xs cursor-pointer hover:bg-gray-100 dark:hover:bg-[#3a3a3a] ${opt.id === value ? 'bg-blue-50 dark:bg-[#333] text-blue-600 dark:text-mat-primary' : 'text-slate-600 dark:text-gray-300'}`}><div className="font-medium">{opt.name}</div><div className="text-[10px] opacity-70">{opt.minutesPerMeter} min</div></div>))) : (<div className="px-3 py-2 text-xs text-gray-400 text-center">Keine Treffer</div>)}</div>
                 </div>
             );
-
-            return (
-                <div className="relative w-full" ref={wrapperRef}>
-                    <div onClick={toggleOpen} className={`w-full p-2 flex items-center justify-between cursor-pointer border-b bg-transparent text-sm transition-colors ${isOpen ? 'border-blue-500 dark:border-mat-primary' : 'border-gray-200 dark:border-[#333]'}`}>
-                        <span className={`truncate ${!selectedOption ? 'text-gray-400' : 'text-slate-700 dark:text-white'}`}>{selectedOption ? `${selectedOption.name} (${selectedOption.minutesPerMeter} min)` : placeholder}</span>
-                        <IconChevronDown className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} size={14} />
-                    </div>
-                    {isOpen && ReactDOM.createPortal(dropdownContent, document.body)}
-                </div>
-            );
+            return (<div className="relative w-full" ref={wrapperRef}><div onClick={toggleOpen} className={`w-full p-2 flex items-center justify-between cursor-pointer border-b bg-transparent text-sm transition-colors ${isOpen ? 'border-blue-500 dark:border-mat-primary' : 'border-gray-200 dark:border-[#333]'}`}><span className={`truncate ${!selectedOption ? 'text-gray-400' : 'text-slate-700 dark:text-white'}`}>{selectedOption ? `${selectedOption.name} (${selectedOption.minutesPerMeter} min)` : placeholder}</span><IconChevronDown className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} size={14} /></div>{isOpen && ReactDOM.createPortal(dropdownContent, document.body)}</div>);
         };
 
         function ProjectCalculator() {
-            // --- STATE ---
-            const [darkMode, setDarkMode] = useState(() => {
-                const saved = localStorage.getItem('kalkulator_dark');
-                return saved !== null ? saved === 'true' : true;
-            });
+            const [darkMode, setDarkMode] = useState(() => { const saved = localStorage.getItem('kalkulator_dark'); return saved !== null ? saved === 'true' : true; });
             const [activeTab, setActiveTab] = useState('calc');
             const [projectName, setProjectName] = useState('Neues Projekt');
             const [materialCost, setMaterialCost] = useState(0);
             const [targetMargin, setTargetMargin] = useState(20);
             const [prepTimeMinutes, setPrepTimeMinutes] = useState(0);
-            
-            // DB States
             const [isExternalData, setIsExternalData] = useState(false);
             const [loadError, setLoadError] = useState(null);
-            const [dbPath, setDbPath] = useState(() => localStorage.getItem('kalkulator_db_path') || DATABASE_PATH);
             const [weldTypes, setWeldTypes] = useState(DEFAULT_WELD_TYPES);
-            const [settings, setSettings] = useState({ 
-                coordinatorRate: 85.00, rate1: 65.00, percent1: 10, rate2: 0, percent2: 30, rate3: 0, percent3: 60
-            });
-
-            // UI States
+            const [settings, setSettings] = useState({ coordinatorRate: 85.00, rate1: 65.00, percent1: 10, rate2: 0, percent2: 30, rate3: 0, percent3: 60 });
             const [entries, setEntries] = useState([]);
             const [dbSearchTerm, setDbSearchTerm] = useState("");
+            const [isFullscreen, setIsFullscreen] = useState(false);
+            const [dbPath, setDbPath] = useState(() => localStorage.getItem('kalkulator_db_path') || DATABASE_PATH);
             const fileInputRef = useRef(null);
 
-            // --- EFFECTS ---
-            useEffect(() => {
-                if (darkMode) document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
-                localStorage.setItem('kalkulator_dark', darkMode);
-            }, [darkMode]);
+            useEffect(() => { if (darkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); localStorage.setItem('kalkulator_dark', darkMode); }, [darkMode]);
 
-            const mergeSettings = (newSettings) => {
-                setSettings(prev => ({
-                    ...prev,
-                    ...newSettings,
-                    percent1: newSettings.percent1 ?? prev.percent1,
-                    percent2: newSettings.percent2 ?? prev.percent2,
-                    percent3: newSettings.percent3 ?? prev.percent3
-                }));
-            };
-
-            const processExternalData = (data) => {
-                if (data) {
-                    setWeldTypes(data.weldTypes || []);
-                    if(data.settings) mergeSettings(data.settings);
-                    setIsExternalData(true);
-                    setLoadError(null);
+            const toggleFullscreen = () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(err => console.log(err));
                 } else {
-                    setLoadError("Format ungültig.");
-                    setIsExternalData(false);
+                    if (document.exitFullscreen) document.exitFullscreen().then(() => setIsFullscreen(false));
                 }
             };
+            useEffect(() => { const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement); document.addEventListener("fullscreenchange", handleFsChange); return () => document.removeEventListener("fullscreenchange", handleFsChange); }, []);
 
-            const loadDatabaseScript = (path) => {
-                setLoadError(null);
-                const oldScript = document.getElementById('db-script');
-                if (oldScript) oldScript.remove();
-                
-                const script = document.createElement('script');
-                script.id = 'db-script';
-                script.src = path;
-                script.onload = () => {
-                    if (window.GEHEIM_DATEN) {
-                        try {
-                            const decodedString = decodeURIComponent(escape(atob(window.GEHEIM_DATEN)));
-                            const data = JSON.parse(decodedString);
-                            processExternalData(data);
-                        } catch (e) { setLoadError("Fehler beim Entschlüsseln."); setIsExternalData(false); }
-                    } else if (window.EXTERNE_DATEN) {
-                        processExternalData(window.EXTERNE_DATEN);
-                    } else {
-                        setLoadError("Datei geladen, aber keine Daten gefunden.");
-                        setIsExternalData(false);
-                    }
-                };
-                script.onerror = () => { setLoadError("Automatische Verbindung fehlgeschlagen."); setIsExternalData(false); };
-                document.body.appendChild(script);
-            };
+            const mergeSettings = (newSettings) => { setSettings(prev => ({ ...prev, ...newSettings, percent1: newSettings.percent1 ?? prev.percent1, percent2: newSettings.percent2 ?? prev.percent2, percent3: newSettings.percent3 ?? prev.percent3 })); };
+            const processExternalData = (data) => { if (data) { setWeldTypes(data.weldTypes || []); if(data.settings) mergeSettings(data.settings); setIsExternalData(true); setLoadError(null); } else { setLoadError("Format ungültig."); setIsExternalData(false); } };
+            const loadDatabaseScript = (path) => { setLoadError(null); const oldScript = document.getElementById('db-script'); if (oldScript) oldScript.remove(); const script = document.createElement('script'); script.id = 'db-script'; script.src = path + "?t=" + new Date().getTime(); script.onload = () => { if (window.GEHEIM_DATEN) { try { const decodedString = decodeURIComponent(escape(atob(window.GEHEIM_DATEN))); const data = JSON.parse(decodedString); processExternalData(data); } catch (e) { setLoadError("Fehler beim Entschlüsseln."); setIsExternalData(false); } } else if (window.EXTERNE_DATEN) { processExternalData(window.EXTERNE_DATEN); } else { setLoadError("Datenbank leer oder Format falsch."); setIsExternalData(false); } }; script.onerror = () => { setLoadError("Keine Datenbank gefunden (nutze lokalen Speicher)."); setIsExternalData(false); }; document.body.appendChild(script); };
+            const handleFileUpload = (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const blob = new Blob([e.target.result], {type: 'application/javascript'}); const url = URL.createObjectURL(blob); const oldScript = document.getElementById('db-script-manual'); if (oldScript) oldScript.remove(); const script = document.createElement('script'); script.id = 'db-script-manual'; script.src = url; script.onload = () => { if (window.GEHEIM_DATEN) { try { const decodedString = decodeURIComponent(escape(atob(window.GEHEIM_DATEN))); const data = JSON.parse(decodedString); processExternalData(data); } catch (e) { setLoadError("Entschlüsselung fehlgeschlagen."); } } else if (window.EXTERNE_DATEN) { processExternalData(window.EXTERNE_DATEN); } URL.revokeObjectURL(url); }; document.body.appendChild(script); } catch (err) { setLoadError("Fehler."); } }; reader.readAsText(file); };
 
-            const handleFileUpload = (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const blob = new Blob([e.target.result], {type: 'application/javascript'});
-                        const url = URL.createObjectURL(blob);
-                        const oldScript = document.getElementById('db-script-manual');
-                        if (oldScript) oldScript.remove();
-                        const script = document.createElement('script');
-                        script.id = 'db-script-manual';
-                        script.src = url;
-                        script.onload = () => {
-                             if (window.GEHEIM_DATEN) {
-                                try {
-                                    const decodedString = decodeURIComponent(escape(atob(window.GEHEIM_DATEN)));
-                                    const data = JSON.parse(decodedString);
-                                    processExternalData(data);
-                                } catch (e) { setLoadError("Entschlüsselung fehlgeschlagen."); }
-                            } else if (window.EXTERNE_DATEN) {
-                                processExternalData(window.EXTERNE_DATEN);
-                            }
-                            URL.revokeObjectURL(url); 
-                        };
-                        document.body.appendChild(script);
-                    } catch (err) { setLoadError("Fehler."); }
-                };
-                reader.readAsText(file);
-            };
-
-            // Init Load
-            useEffect(() => {
-                const savedTypes = localStorage.getItem('kalkulator_weldTypes');
-                const savedSettings = localStorage.getItem('kalkulator_settings');
-                
-                if(savedTypes) setWeldTypes(JSON.parse(savedTypes));
-                if(savedSettings) {
-                    const parsed = JSON.parse(savedSettings);
-                    if (parseFloat(parsed.percent1) === 100 && (!parsed.percent2 || parsed.percent2 === 0) && (!parsed.percent3 || parsed.percent3 === 0)) {
-                        parsed.percent1 = 10;
-                        parsed.percent2 = 30;
-                        parsed.percent3 = 60;
-                    }
-                    if(parsed.percent2 === undefined) parsed.percent2 = 30;
-                    if(parsed.percent3 === undefined) parsed.percent3 = 60;
-                    if(parsed.percent1 === undefined) parsed.percent1 = 10;
-                    setSettings(parsed);
-                }
-                loadDatabaseScript(dbPath);
-            }, []);
-
-            useEffect(() => {
-                if(!isExternalData) {
-                    localStorage.setItem('kalkulator_weldTypes', JSON.stringify(weldTypes));
-                    localStorage.setItem('kalkulator_settings', JSON.stringify(settings));
-                }
-            }, [weldTypes, settings, isExternalData]);
-
+            useEffect(() => { const savedTypes = localStorage.getItem('kalkulator_weldTypes'); const savedSettings = localStorage.getItem('kalkulator_settings'); if(savedTypes) setWeldTypes(JSON.parse(savedTypes)); if(savedSettings) { const parsed = JSON.parse(savedSettings); if (parseFloat(parsed.percent1) === 100 && (!parsed.percent2 || parsed.percent2 === 0)) { parsed.percent1 = 10; parsed.percent2 = 30; parsed.percent3 = 60; } if(parsed.percent2 === undefined) parsed.percent2 = 30; if(parsed.percent3 === undefined) parsed.percent3 = 60; if(parsed.percent1 === undefined) parsed.percent1 = 10; setSettings(parsed); } loadDatabaseScript(dbPath); }, []);
+            useEffect(() => { if(!isExternalData) { localStorage.setItem('kalkulator_weldTypes', JSON.stringify(weldTypes)); localStorage.setItem('kalkulator_settings', JSON.stringify(settings)); } }, [weldTypes, settings, isExternalData]);
             const handlePathSave = () => { localStorage.setItem('kalkulator_db_path', dbPath); loadDatabaseScript(dbPath); };
 
-            // BERECHNUNGEN
             const mixedHourlyRate = ((settings.rate1 * (settings.percent1 / 100)) + (settings.rate2 * (settings.percent2 / 100)) + (settings.rate3 * (settings.percent3 / 100)));
-            
-            const calculateRowTime = (entry) => {
-                const type = weldTypes.find(t => t.id === entry.weldTypeId);
-                if (!type) return 0;
-                const amount = entry.lengthMm || 0;
-                const factor = entry.count || 0;
-                return amount * factor * type.minutesPerMeter;
-            };
-
-            const formatTimeDisplay = (minutes) => {
-                const hours = minutes / 60;
-                return `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(minutes)} (${new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(hours)} h)`;
-            };
-
+            const calculateRowTime = (entry) => { const type = weldTypes.find(t => t.id === entry.weldTypeId); if (!type) return 0; return (entry.lengthMm || 0) * (entry.count || 0) * type.minutesPerMeter; };
+            const formatTimeDisplay = (minutes) => { const hours = minutes / 60; return `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(minutes)} (${new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(hours)} h)`; };
             const totalRowMinutes = entries.reduce((acc, entry) => acc + calculateRowTime(entry), 0);
             const totalRowHours = totalRowMinutes / 60;
             const laborCostStandard = totalRowHours * mixedHourlyRate;
@@ -394,32 +203,28 @@
             const marginFactor = (100 - targetMargin) / 100;
             const safeFactor = marginFactor <= 0 ? 0.01 : marginFactor; 
             const salesPrice = totalVariableCosts / safeFactor;
-            const profit = salesPrice - totalVariableCosts; // FIX: Profit berechnen
+            const profit = salesPrice - totalVariableCosts; 
 
-            const addEntry = (category) => {
-                if(weldTypes.length === 0) return;
-                const defaultType = weldTypes.find(t => t.category === category);
-                const defaultTypeId = defaultType ? defaultType.id : ''; 
-                if (!defaultTypeId) { alert(`Keine Daten für Kategorie '${category}' in der Datenbank gefunden!`); return; }
-                setEntries([...entries, { id: Date.now().toString(), weldTypeId: defaultTypeId, lengthMm: 0, count: 1, category }]);
-            };
+            const addEntry = (category) => { if(weldTypes.length === 0) return; const defaultType = weldTypes.find(t => t.category === category); const defaultTypeId = defaultType ? defaultType.id : ''; if (!defaultTypeId) { alert(`Keine Daten für Kategorie '${category}' in der Datenbank gefunden!`); return; } setEntries([...entries, { id: Date.now().toString(), weldTypeId: defaultTypeId, lengthMm: 0, count: 1, category }]); };
             const removeEntry = (id) => setEntries(entries.filter(e => e.id !== id));
             const updateEntry = (id, field, value) => setEntries(entries.map(e => e.id === id ? { ...e, [field]: value } : e));
             const formatCurrency = (val) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val || 0);
             const formatNumber = (val) => new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(val || 0);
 
-            // --- VIEW ---
             return (
                 <div className="w-full min-h-screen bg-gray-100 dark:bg-mat-bg text-slate-800 dark:text-mat-text transition-colors duration-300">
                     <nav className="bg-white dark:bg-mat-surface border-b border-gray-200 dark:border-[#333] sticky top-0 z-50 shadow-md no-print">
                         <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
                             <div className="flex items-center gap-3"><div className="w-8 h-8 bg-blue-600 dark:bg-mat-primary rounded-lg flex items-center justify-center text-white dark:text-black font-bold shadow-lg"><IconCalculator /></div><span className="font-bold text-lg tracking-wide text-slate-800 dark:text-white">Kalkulator <span className="text-blue-600 dark:text-mat-primary text-xs uppercase bg-blue-100 dark:bg-mat-surface2 px-1 rounded ml-1">Pro</span></span></div>
                             <div className="flex gap-2 bg-gray-100 dark:bg-[#121212] p-1 rounded-lg border border-gray-200 dark:border-[#333]">
-                                <button onClick={() => setActiveTab('calc')} className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm transition-all ${activeTab === 'calc' ? 'bg-white dark:bg-mat-surface text-blue-600 dark:text-mat-primary shadow' : 'text-gray-500 dark:text-mat-subtext hover:text-black dark:hover:text-white'}`}><IconCalculator /> Kalkulator</button>
-                                <button onClick={() => setActiveTab('db')} className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm transition-all ${activeTab === 'db' ? 'bg-white dark:bg-mat-surface text-purple-600 dark:text-mat-secondary shadow' : 'text-gray-500 dark:text-mat-subtext hover:text-black dark:hover:text-white'}`}><IconSettings /> Datenbank</button>
-                                <button onClick={() => setActiveTab('print')} className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm transition-all ${activeTab === 'print' ? 'bg-white dark:bg-mat-surface text-emerald-600 dark:text-white shadow' : 'text-gray-500 dark:text-mat-subtext hover:text-black dark:hover:text-white'}`}><IconFileText /> Ergebnis</button>
+                                <button onClick={() => setActiveTab('calc')} className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm transition-all ${activeTab === 'calc' ? 'bg-white dark:bg-mat-surface text-blue-600 dark:text-mat-primary shadow' : 'text-gray-500 dark:text-mat-subtext hover:text-black dark:hover:text-white'}`}><IconCalculator /> <span className="hidden sm:inline">Kalkulator</span></button>
+                                <button onClick={() => setActiveTab('db')} className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm transition-all ${activeTab === 'db' ? 'bg-white dark:bg-mat-surface text-purple-600 dark:text-mat-secondary shadow' : 'text-gray-500 dark:text-mat-subtext hover:text-black dark:hover:text-white'}`}><IconSettings /> <span className="hidden sm:inline">Datenbank</span></button>
+                                <button onClick={() => setActiveTab('print')} className={`px-3 py-1.5 rounded-md flex items-center gap-2 text-sm transition-all ${activeTab === 'print' ? 'bg-white dark:bg-mat-surface text-emerald-600 dark:text-white shadow' : 'text-gray-500 dark:text-mat-subtext hover:text-black dark:hover:text-white'}`}><IconFileText /> <span className="hidden sm:inline">Ergebnis</span></button>
                             </div>
-                            <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-mat-surface2 text-gray-500 dark:text-mat-subtext transition-colors">{darkMode ? <IconMoon /> : <IconSun />}</button>
+                            <div className="flex gap-2">
+                                <button onClick={toggleFullscreen} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-mat-surface2 text-gray-500 dark:text-mat-subtext transition-colors">{isFullscreen ? <IconMinimize /> : <IconMaximize />}</button>
+                                <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-mat-surface2 text-gray-500 dark:text-mat-subtext transition-colors">{darkMode ? <IconMoon /> : <IconSun />}</button>
+                            </div>
                         </div>
                     </nav>
 
@@ -489,7 +294,6 @@
                                 <div className="text-center text-xs text-gray-400 dark:text-[#444] no-print pb-10">Basis: Mischstundensatz {formatCurrency(mixedHourlyRate)}/h</div>
                             </div>
                         )}
-
                         {/* --- TAB 2: DATENBANK --- */}
                         {activeTab === 'db' && (
                             <div className="space-y-6 fade-in max-w-2xl mx-auto">
@@ -520,10 +324,9 @@
                                 </div>
                             </div>
                         )}
-
                         {/* --- TAB 3: PRINT --- */}
                         {activeTab === 'print' && (
-                            <div id="print-area" className="max-w-4xl mx-auto bg-white text-black p-12 shadow-xl fade-in print:shadow-none print:p-0" style={{ backgroundColor: 'white', color: 'black' }}>
+                            <div id="print-area" className="max-w-4xl mx-auto" style={{ backgroundColor: 'white', color: 'black', padding: '40px' }}>
                                 <div className="border-b-2 border-black pb-6 mb-8 flex justify-between items-end"><div><h1 className="text-4xl font-extrabold tracking-tighter" style={{color:'black'}}>KALKULATION</h1><p className="text-gray-500 mt-1" style={{color:'#555'}}>Interne Berechnung</p></div><div className="text-right"><p className="font-bold text-xl" style={{color:'black'}}>{projectName}</p><p className="text-sm text-gray-500" style={{color:'#555'}}>{new Date().toLocaleDateString('de-DE')}</p></div></div>
                                 <div className="grid grid-cols-3 gap-6 mb-8">
                                     <div className="bg-gray-100 p-4 rounded border border-gray-200" style={{backgroundColor:'#f3f4f6', borderColor:'#e5e7eb'}}><span className="text-xs font-bold text-gray-500 uppercase block" style={{color:'#6b7280'}}>Stunden</span><span className="text-2xl font-bold" style={{color:'black'}}>{formatNumber(totalRowHours + prepHours)} h</span></div>
@@ -531,8 +334,8 @@
                                     <div className="bg-blue-50 p-4 rounded border border-blue-200 text-blue-900" style={{backgroundColor:'#eff6ff', borderColor:'#bfdbfe', color:'#1e3a8a'}}><span className="text-xs font-bold text-blue-600 uppercase block" style={{color:'#2563eb'}}>Preis</span><span className="text-2xl font-bold">{formatCurrency(salesPrice)}</span></div>
                                 </div>
                                 <div className="mb-8 border-b border-gray-200 pb-4" style={{borderColor:'#e5e7eb'}}><h3 className="text-xs font-bold uppercase text-gray-500 mb-2" style={{color:'#6b7280'}}>Zusatzleistungen</h3><div className="flex justify-between py-1 border-b border-gray-100" style={{borderColor:'#f3f4f6'}}><span>Arbeitsvorbereitung (Koordinator)</span><div className="w-48 flex justify-between"><span>{formatNumber(prepTimeMinutes)} Min</span><span className="font-mono">{formatCurrency(prepCost)}</span></div></div></div>
-                                <div className="mb-12">{['rohr', 'schweiss', 'sonstiges'].map(catKey => { const catEntries = entries.filter(e => e.category === catKey); if (catEntries.length === 0) return null; return (<div key={catKey} className="mb-6 print-break-inside"><h4 className="text-xs font-bold uppercase text-gray-500 mb-2 border-b border-gray-300 pb-1" style={{color:'#6b7280', borderColor:'#d1d5db'}}>{CATEGORIES[catKey].label}</h4><table className="w-full text-sm"><thead className="text-gray-400 text-xs uppercase" style={{color:'#9ca3af'}}><tr><th className="text-left py-1">Pos</th><th className="text-right py-1">Faktor</th><th className="text-right py-1">Menge</th><th className="text-right py-1">Zeit</th></tr></thead><tbody>{catEntries.map(entry => { const t = weldTypes.find(x => x.id === entry.weldTypeId); return (<tr key={entry.id} className="border-b border-gray-100" style={{borderColor:'#f3f4f6'}}><td className="py-2 font-medium">{t?.name}</td><td className="py-2 text-right text-gray-600" style={{color:'#4b5563'}}>{entry.count}</td><td className="py-2 text-right text-gray-600" style={{color:'#4b5563'}}>{formatNumber(entry.lengthMm)}</td><td className="py-2 text-right font-mono">{formatTimeDisplay(calculateRowTime(entry))}</td></tr>) })}</tbody></table></div>) })}</div>
-                                <div className="flex justify-end print-break-inside"><div className="w-1/2 space-y-2 text-sm text-right"><div className="flex justify-between text-gray-600" style={{color:'#4b5563'}}><span>Material</span><span>{formatCurrency(materialCost)}</span></div><div className="flex justify-between text-gray-600" style={{color:'#4b5563'}}><span>Personal (Misch + Koord.)</span><span>{formatCurrency(laborCostStandard + prepCost)}</span></div><div className="flex justify-between font-bold border-t border-gray-300 pt-2 mt-2" style={{borderColor:'#d1d5db'}}><span>Herstellkosten</span><span>{formatCurrency(totalVariableCosts)}</span></div><div className="flex justify-between text-green-600 text-xs" style={{color:'#16a34a'}}><span>Marge ({targetMargin}%)</span><span>{formatCurrency(profit)}</span></div><div className="flex justify-between font-extrabold text-2xl border-t-2 border-black pt-2 mt-2" style={{borderColor:'black'}}><span>Endpreis</span><span>{formatCurrency(salesPrice)}</span></div></div></div>
+                                <div className="mb-12">{['rohr', 'schweiss', 'sonstiges'].map(catKey => { const catEntries = entries.filter(e => e.category === catKey); if (catEntries.length === 0) return null; return (<div key={catKey} className="mb-6 print-break-inside"><h4 className="text-xs font-bold uppercase text-gray-500 mb-2 border-b border-gray-300 pb-1" style={{color:'#6b7280', borderColor:'#d1d5db'}}>{CATEGORIES[catKey].label}</h4><table className="w-full text-sm"><thead className="text-gray-400 text-xs uppercase" style={{color:'#9ca3af'}}><tr><th className="text-left py-1">Pos</th><th className="text-right py-1">Faktor</th><th className="text-right py-1">Menge</th><th className="text-right py-1">Zeit</th></tr></thead><tbody>{catEntries.map(entry => { const t = weldTypes.find(x => x.id === entry.weldTypeId); return (<tr key={entry.id} className="border-b border-gray-100" style={{borderColor:'#f3f4f6'}}><td className="py-2 font-medium" style={{color:'black'}}>{t?.name}</td><td className="py-2 text-right text-gray-600" style={{color:'#4b5563'}}>{entry.count}</td><td className="py-2 text-right text-gray-600" style={{color:'#4b5563'}}>{formatNumber(entry.lengthMm)}</td><td className="py-2 text-right font-mono" style={{color:'black'}}>{formatTimeDisplay(calculateRowTime(entry))}</td></tr>) })}</tbody></table></div>) })}</div>
+                                <div className="flex justify-end print-break-inside"><div className="w-1/2 space-y-2 text-sm text-right"><div className="flex justify-between text-gray-600" style={{color:'#4b5563'}}><span>Material</span><span>{formatCurrency(materialCost)}</span></div><div className="flex justify-between text-gray-600" style={{color:'#4b5563'}}><span>Personal (Misch + Koord.)</span><span>{formatCurrency(laborCostStandard + prepCost)}</span></div><div className="flex justify-between font-bold border-t border-gray-300 pt-2 mt-2" style={{borderColor:'#d1d5db'}}><span style={{color:'black'}}>Herstellkosten</span><span style={{color:'black'}}>{formatCurrency(totalVariableCosts)}</span></div><div className="flex justify-between text-green-600 text-xs" style={{color:'#16a34a'}}><span>Marge ({targetMargin}%)</span><span>{formatCurrency(profit)}</span></div><div className="flex justify-between font-extrabold text-2xl border-t-2 border-black pt-2 mt-2" style={{borderColor:'black'}}><span style={{color:'black'}}>Endpreis</span><span style={{color:'black'}}>{formatCurrency(salesPrice)}</span></div></div></div>
                                 <div className="mt-8 text-right no-print"><button onClick={() => window.print()} className="bg-black text-white px-6 py-2 rounded font-bold hover:bg-gray-800">Drucken</button></div>
                             </div>
                         )}
